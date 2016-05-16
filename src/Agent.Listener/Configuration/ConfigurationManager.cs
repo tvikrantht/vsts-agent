@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
         bool IsServiceConfigured();
         Task EnsureConfiguredAsync(CommandSettings command);
         Task ConfigureAsync(CommandSettings command);
+        Task UnconfigureAsync(CommandSettings command);
         AgentSettings LoadSettings();
     }
 
@@ -263,7 +264,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             {
                 Trace.Info("Configuring to run the agent as service");
                 successfullyConfigured = serviceControlManager.ConfigureService(settings, command);
-            }            
+            }
 
             // chown/chmod the _diag and settings files to the current user, if we started with sudo.
             // Also if we started with sudo, the _diag will be owned by root. Change this to current login user
@@ -297,6 +298,74 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             }
         }
 
+        public async Task UnconfigureAsync(CommandSettings command)
+        {
+            if (!_store.IsConfigured())
+            {
+                _term.WriteError(StringUtil.Loc("MissingSettings"));
+            }
+
+            if (!_store.HasCredentials())
+            {
+                _term.WriteError(StringUtil.Loc("MissingCredentials"));
+            }
+
+            //stop, uninstall service and remove service config file
+            if (_store.IsServiceConfigured())
+            {
+                var serviceControlManager = HostContext.GetService<IServiceControlManager>();
+                try
+                {
+                    serviceControlManager.UnconfigureService();
+                    _term.WriteLine(StringUtil.Loc("ServiceUninstalled"));
+                }
+                catch (Exception ex)
+                {
+                    Trace.Error(ex);
+                    _term.WriteError(StringUtil.Loc("ServiceUninstallFailed"));
+                }
+            }
+
+            //delete agent from the server
+            try
+            {
+                AgentSettings settings = _store.GetSettings();
+                var credentialManager = HostContext.GetService<ICredentialManager>();
+                VssCredentials creds = credentialManager.LoadCredentials();
+                Uri uri = new Uri(settings.ServerUrl);
+                VssConnection conn = ApiUtil.CreateConnection(uri, creds);
+                var agentSvr = HostContext.GetService<IAgentServer>();
+                await agentSvr.ConnectAsync(conn);
+                await agentSvr.DeleteAgentAsync(settings.PoolId, settings.AgentId);
+                _term.WriteLine(StringUtil.Loc("AgentDeleted"));
+            }
+            catch (Exception ex)
+            {
+                Trace.Error(ex);
+                _term.WriteError(StringUtil.Loc("DeleteAgentFailed"));
+            }
+
+            //delete credential config file
+            try
+            {
+                _store.DeleteCredential();
+            }
+            catch (Exception ex)
+            {
+                Trace.Error(ex);
+            }
+
+            //delete settings config file
+            try
+            {
+                _store.DeleteSettings();
+            }
+            catch (Exception ex)
+            {
+                Trace.Error(ex);
+            }
+        }
+
         private ICredentialProvider GetCredentialProvider(CommandSettings command, string serverUrl)
         {
             Trace.Info(nameof(GetCredentialProvider));
@@ -315,7 +384,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 // Hosted defaults to PAT authentication.
                 bool isHosted = serverUrl.IndexOf("visualstudio.com", StringComparison.OrdinalIgnoreCase) != -1
                     || serverUrl.IndexOf("tfsallin.net", StringComparison.OrdinalIgnoreCase) != -1;
-                string defaultAuth = isHosted ? Constants.Configuration.PAT : 
+                string defaultAuth = isHosted ? Constants.Configuration.PAT :
                     (Constants.Agent.Platform == Constants.OSPlatform.Windows ? Constants.Configuration.Integrated : Constants.Configuration.Negotiate);
                 string authType = command.GetAuth(defaultValue: defaultAuth);
 
