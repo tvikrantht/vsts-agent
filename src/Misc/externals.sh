@@ -57,9 +57,7 @@ get_abs_path() {
 LAYOUT_DIR=$(get_abs_path `dirname $0`/../../_layout)
 DOWNLOAD_DIR=$(get_abs_path `dirname $0`/../../_downloads)
 
-set -o pipefail
-
-get_current_os_name() {
+function get_current_os_name() {
 
     local uname=$(uname)
     if [ "$uname" = "Darwin" ]; then
