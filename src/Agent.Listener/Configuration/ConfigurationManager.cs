@@ -300,69 +300,106 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
         public async Task UnconfigureAsync(CommandSettings command)
         {
-            if (!_store.IsConfigured())
-            {
-                _term.WriteError(StringUtil.Loc("MissingSettings"));
-            }
-
-            if (!_store.HasCredentials())
-            {
-                _term.WriteError(StringUtil.Loc("MissingCredentials"));
-            }
-
             //stop, uninstall service and remove service config file
+            _term.Write(StringUtil.Loc("UninstallingService"));
             if (_store.IsServiceConfigured())
             {
                 var serviceControlManager = HostContext.GetService<IServiceControlManager>();
                 try
                 {
                     serviceControlManager.UnconfigureService();
-                    _term.WriteLine(StringUtil.Loc("ServiceUninstalled"));
+                    _term.WriteLine(StringUtil.Loc("Success"));
                 }
                 catch (Exception ex)
                 {
                     Trace.Error(ex);
-                    _term.WriteError(StringUtil.Loc("ServiceUninstallFailed"));
+                    _term.WriteLine(StringUtil.Loc("Failed"));
+                    throw;
                 }
+            }
+            else
+            {
+                _term.WriteLine(StringUtil.Loc("NotFound"));
             }
 
             //delete agent from the server
-            try
+            _term.Write(StringUtil.Loc("UnregisteringAgent"));
+            bool isConfigured = _store.IsConfigured();
+            bool hasCredentials = _store.HasCredentials();
+            if (isConfigured && hasCredentials)
             {
-                AgentSettings settings = _store.GetSettings();
-                var credentialManager = HostContext.GetService<ICredentialManager>();
-                VssCredentials creds = credentialManager.LoadCredentials();
-                Uri uri = new Uri(settings.ServerUrl);
-                VssConnection conn = ApiUtil.CreateConnection(uri, creds);
-                var agentSvr = HostContext.GetService<IAgentServer>();
-                await agentSvr.ConnectAsync(conn);
-                await agentSvr.DeleteAgentAsync(settings.PoolId, settings.AgentId);
-                _term.WriteLine(StringUtil.Loc("AgentDeleted"));
+                try
+                {
+                    AgentSettings settings = _store.GetSettings();
+                    var credentialManager = HostContext.GetService<ICredentialManager>();
+                    VssCredentials creds = credentialManager.LoadCredentials();
+                    Uri uri = new Uri(settings.ServerUrl);
+                    VssConnection conn = ApiUtil.CreateConnection(uri, creds);
+                    var agentSvr = HostContext.GetService<IAgentServer>();
+                    await agentSvr.ConnectAsync(conn);
+                    await agentSvr.DeleteAgentAsync(settings.PoolId, settings.AgentId);
+                    _term.WriteLine(StringUtil.Loc("Success"));
+                }
+                catch (Exception ex)
+                {
+                    Trace.Error(ex);
+                    bool agentNotFound = ex is TaskAgentPoolNotFoundException || ex is TaskAgentNotFoundException;
+                    if (agentNotFound)
+                    {
+                        _term.WriteLine(StringUtil.Loc("NotFound"));
+                    }
+                    else
+                    {
+                        _term.WriteLine(StringUtil.Loc("Failed"));
+                        throw;
+                    }
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Trace.Error(ex);
-                _term.WriteError(StringUtil.Loc("DeleteAgentFailed"));
+                _term.WriteLine(StringUtil.Loc("MissingConfig"));
             }
 
             //delete credential config file
-            try
+            _term.Write(StringUtil.Loc("DeletingCredentials"));
+            if (hasCredentials)
             {
-                _store.DeleteCredential();
+                try
+                {
+                    _store.DeleteCredential();
+                    _term.WriteLine(StringUtil.Loc("Success"));
+                }
+                catch (Exception ex)
+                {
+                    Trace.Error(ex);
+                    _term.WriteLine(StringUtil.Loc("Failed"));
+                    throw;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Trace.Error(ex);
+                _term.WriteLine(StringUtil.Loc("NotFound"));
             }
 
             //delete settings config file
-            try
+            _term.Write(StringUtil.Loc("DeletingSettings"));
+            if (isConfigured)
             {
-                _store.DeleteSettings();
+                try
+                {
+                    _store.DeleteSettings();
+                    _term.WriteLine(StringUtil.Loc("Success"));
+                }
+                catch (Exception ex)
+                {
+                    Trace.Error(ex);
+                    _term.WriteLine(StringUtil.Loc("Failed"));
+                    throw;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Trace.Error(ex);
+                _term.WriteLine(StringUtil.Loc("NotFound"));
             }
         }
 
