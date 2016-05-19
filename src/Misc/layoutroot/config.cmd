@@ -13,5 +13,8 @@ IF "%1"=="remove" (
     "%~dp0bin\Agent.Listener.exe" unconfigure
 ) ELSE (
     "%~dp0bin\Agent.Listener.exe" configure %*
+    IF EXIST .Agent (attrib +h .Agent)
+    IF EXIST .Credentials (attrib +h .Credentials)
+    IF EXIST .Service (attrib +h .Service)
 )
 
