@@ -300,35 +300,28 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
         public async Task UnconfigureAsync(CommandSettings command)
         {
-            //stop, uninstall service and remove service config file
-            _term.Write(StringUtil.Loc("UninstallingService"));
-            if (_store.IsServiceConfigured())
+            string currentAction = StringUtil.Loc("UninstallingService");
+            try
             {
-                var serviceControlManager = HostContext.GetService<IServiceControlManager>();
-                try
+                //stop, uninstall service and remove service config file
+                _term.WriteLine(currentAction);
+                if (_store.IsServiceConfigured())
                 {
+                    var serviceControlManager = HostContext.GetService<IServiceControlManager>();
                     serviceControlManager.UnconfigureService();
-                    _term.WriteLine(StringUtil.Loc("Success"));
+                    _term.WriteLine(StringUtil.Loc("Success") + currentAction);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Trace.Error(ex);
-                    _term.WriteLine(StringUtil.Loc("Failed"));
-                    throw;
+                    _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
                 }
-            }
-            else
-            {
-                _term.WriteLine(StringUtil.Loc("NotFound"));
-            }
 
-            //delete agent from the server
-            _term.Write(StringUtil.Loc("UnregisteringAgent"));
-            bool isConfigured = _store.IsConfigured();
-            bool hasCredentials = _store.HasCredentials();
-            if (isConfigured && hasCredentials)
-            {
-                try
+                //delete agent from the server
+                currentAction = StringUtil.Loc("UnregisteringAgent");
+                _term.WriteLine(currentAction);
+                bool isConfigured = _store.IsConfigured();
+                bool hasCredentials = _store.HasCredentials();
+                if (isConfigured && hasCredentials)
                 {
                     AgentSettings settings = _store.GetSettings();
                     var credentialManager = HostContext.GetService<ICredentialManager>();
@@ -337,69 +330,55 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                     VssConnection conn = ApiUtil.CreateConnection(uri, creds);
                     var agentSvr = HostContext.GetService<IAgentServer>();
                     await agentSvr.ConnectAsync(conn);
-                    await agentSvr.DeleteAgentAsync(settings.PoolId, settings.AgentId);
-                    _term.WriteLine(StringUtil.Loc("Success"));
-                }
-                catch (Exception ex)
-                {
-                    Trace.Error(ex);
-                    bool agentNotFound = ex is TaskAgentPoolNotFoundException || ex is TaskAgentNotFoundException;
-                    if (agentNotFound)
+
+                    List<TaskAgent> agents = await agentSvr.GetAgentsAsync(settings.PoolId, settings.AgentName);
+                    if (agents.Count == 0)
                     {
-                        _term.WriteLine(StringUtil.Loc("NotFound"));
+                        _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
                     }
                     else
                     {
-                        _term.WriteLine(StringUtil.Loc("Failed"));
-                        throw;
+                        await agentSvr.DeleteAgentAsync(settings.PoolId, settings.AgentId);
+                        _term.WriteLine(StringUtil.Loc("Success") + currentAction);
                     }
                 }
-            }
-            else
-            {
-                _term.WriteLine(StringUtil.Loc("MissingConfig"));
-            }
+                else
+                {
+                    _term.WriteLine(StringUtil.Loc("MissingConfig"));
+                }
 
-            //delete credential config file
-            _term.Write(StringUtil.Loc("DeletingCredentials"));
-            if (hasCredentials)
-            {
-                try
+                //delete credential config file                
+                currentAction = StringUtil.Loc("DeletingCredentials");
+                _term.WriteLine(currentAction);
+                if (hasCredentials)
                 {
                     _store.DeleteCredential();
-                    _term.WriteLine(StringUtil.Loc("Success"));
+                    _term.WriteLine(StringUtil.Loc("Success") + currentAction);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Trace.Error(ex);
-                    _term.WriteLine(StringUtil.Loc("Failed"));
-                    throw;
+                    _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
                 }
-            }
-            else
-            {
-                _term.WriteLine(StringUtil.Loc("NotFound"));
-            }
 
-            //delete settings config file
-            _term.Write(StringUtil.Loc("DeletingSettings"));
-            if (isConfigured)
-            {
-                try
+                //delete settings config file                
+                currentAction = StringUtil.Loc("DeletingSettings");
+                _term.WriteLine(currentAction);
+                if (isConfigured)
                 {
+
                     _store.DeleteSettings();
-                    _term.WriteLine(StringUtil.Loc("Success"));
+                    _term.WriteLine(StringUtil.Loc("Success") + currentAction);
                 }
-                catch (Exception ex)
+                else
                 {
-                    Trace.Error(ex);
-                    _term.WriteLine(StringUtil.Loc("Failed"));
-                    throw;
+                    _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                _term.WriteLine(StringUtil.Loc("NotFound"));
+                Trace.Error(ex);
+                _term.WriteLine(StringUtil.Loc("Failed") + currentAction);
+                throw;
             }
         }
 
