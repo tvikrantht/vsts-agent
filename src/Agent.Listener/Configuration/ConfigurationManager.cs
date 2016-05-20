@@ -313,7 +313,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 }
                 else
                 {
-                    _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
+                    _term.WriteLine(StringUtil.Loc("Skipping") + currentAction);
                 }
 
                 //delete agent from the server
@@ -334,7 +334,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                     List<TaskAgent> agents = await agentSvr.GetAgentsAsync(settings.PoolId, settings.AgentName);
                     if (agents.Count == 0)
                     {
-                        _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
+                        _term.WriteLine(StringUtil.Loc("Skipping") + currentAction);
                     }
                     else
                     {
@@ -357,7 +357,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 }
                 else
                 {
-                    _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
+                    _term.WriteLine(StringUtil.Loc("Skipping") + currentAction);
                 }
 
                 //delete settings config file                
@@ -365,18 +365,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 _term.WriteLine(currentAction);
                 if (isConfigured)
                 {
-
                     _store.DeleteSettings();
                     _term.WriteLine(StringUtil.Loc("Success") + currentAction);
                 }
                 else
                 {
-                    _term.WriteLine(StringUtil.Loc("NotFound") + currentAction);
+                    _term.WriteLine(StringUtil.Loc("Skipping") + currentAction);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Trace.Error(ex);
                 _term.WriteLine(StringUtil.Loc("Failed") + currentAction);
                 throw;
             }
