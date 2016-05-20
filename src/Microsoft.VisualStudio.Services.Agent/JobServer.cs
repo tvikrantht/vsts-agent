@@ -38,6 +38,20 @@ namespace Microsoft.VisualStudio.Services.Agent
             if (!_connection.HasAuthenticated)
             {
                 await _connection.ConnectAsync();
+                // TODO: REMOVE THIS TRACE STATEMENT BEFORE COMMITING TO MASTER.
+                Trace.Info($@"
+CustomDisplayName: '{_connection.AuthenticatedIdentity.CustomDisplayName}'
+Descriptor.Identifier: '{_connection.AuthenticatedIdentity.Descriptor.Identifier}'
+Descriptor.IdentityType: '{_connection.AuthenticatedIdentity.Descriptor.IdentityType}'
+DisplayName: '{_connection.AuthenticatedIdentity.DisplayName}'
+Id: '{_connection.AuthenticatedIdentity.Id}'
+LocalScopeId: '{_connection.AuthenticatedIdentity.LocalScopeId}'
+MasterId: '{_connection.AuthenticatedIdentity.MasterId}'
+ProviderDisplayName: '{_connection.AuthenticatedIdentity.ProviderDisplayName}'
+ResourceVersion: '{_connection.AuthenticatedIdentity.ResourceVersion}'
+UniqueUserId: '{_connection.AuthenticatedIdentity.UniqueUserId}'
+");
+//Metatype: '{_connection.AuthenticatedIdentity.Metatype}'
             }
 
             _taskClient = _connection.GetClient<TaskHttpClient>();
