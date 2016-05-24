@@ -25,7 +25,7 @@ fi
 #check if we run as root
 if [[ $(id -u) != "0" ]]; then
     echo "Failed: This script requires to run with sudo." >&2
-    exit 5
+    exit 1
 fi
 
 function install()

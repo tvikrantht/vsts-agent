@@ -112,21 +112,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
             string argLine = StringUtil.Format("{0} {1}", _shName, command);
             var unixUtil = HostContext.CreateService<IUnixUtil>();
-            try
-            {
-                unixUtil.ExecAsync(IOUtil.GetRootPath(), "bash", argLine).GetAwaiter().GetResult();
-            }
-            catch (ProcessExitCodeException ex)
-            {
-                if (ex.ExitCode == 5)
-                {
-                    throw new Exception(StringUtil.Loc("ShouldBeAdmin"));
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            unixUtil.ExecAsync(IOUtil.GetRootPath(), "bash", argLine).GetAwaiter().GetResult();
         }
     }
 }

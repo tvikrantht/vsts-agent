@@ -7,7 +7,7 @@ user_id=`id -u`
 
 if [ $user_id -ne 0 ]; then
     echo "Must run as sudo"
-    exit 5
+    exit 1
 fi
 
 SVC_CMD=$1
