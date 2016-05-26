@@ -85,8 +85,8 @@ function generateConstant()
     rundotnet publish failed build_dirs[0]
     
     # get the runtime we are build for
-    # if exist Agent.Listener/bin/${BUILD_CONFIG}/dnxcore50
-    build_folder="Microsoft.VisualStudio.Services.Agent/bin/${BUILD_CONFIG}/dnxcore50"
+    # if exist Agent.Listener/bin/${BUILD_CONFIG}/netcoreapp1.0
+    build_folder="Microsoft.VisualStudio.Services.Agent/bin/${BUILD_CONFIG}/netcoreapp1.0"
     if [ ! -d "${build_folder}" ]; then
         echo "You must build first.  Expecting to find ${build_folder}"
     fi
@@ -157,7 +157,7 @@ function publish ()
 function copyBin ()
 {
     echo Copying ${1}
-    pushd ${1}/bin/${BUILD_CONFIG}/dnxcore50 > /dev/null
+    pushd ${1}/bin/${BUILD_CONFIG}/netcoreapp1.0 > /dev/null
 
     source_dir=$(ls -d */)publish/
     if [ ! -d "$source_dir" ]; then
@@ -225,8 +225,8 @@ function runtest ()
 {
     heading Testing ...
     dotnet publish Test || failed "publishing Test"
-    rm -Rf Test/bin/${BUILD_CONFIG}/dnxcore50/_diag
-    pushd Test/bin/${BUILD_CONFIG}/dnxcore50 > /dev/null
+    rm -Rf Test/bin/${BUILD_CONFIG}/netcoreapp1.0/_diag
+    pushd Test/bin/${BUILD_CONFIG}/netcoreapp1.0 > /dev/null
     pushd $(ls -d */ | grep -v '_')publish > /dev/null
     ./corerun xunit.console.netcore.exe Test.dll -xml testresults.xml || failed "failed tests"
     popd > /dev/null
@@ -251,8 +251,8 @@ function buildtest ()
 function package ()
 {
     # get the runtime we are build for
-    # if exist Agent.Listener/bin/${BUILD_CONFIG}/dnxcore50
-    build_folder="Agent.Listener/bin/${BUILD_CONFIG}/dnxcore50"
+    # if exist Agent.Listener/bin/${BUILD_CONFIG}/netcoreapp1.0
+    build_folder="Agent.Listener/bin/${BUILD_CONFIG}/netcoreapp1.0"
     if [ ! -d "${build_folder}" ]; then
         echo "You must build first.  Expecting to find ${build_folder}"
     fi
