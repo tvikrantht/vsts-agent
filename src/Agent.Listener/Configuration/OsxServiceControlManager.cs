@@ -17,7 +17,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
         private const string _plistTemplate = "vsts.agent.plist.template";
         private const string _shTemplate = "darwin.svc.sh.template";
         private const string _svcShName = "svc.sh";
-        private const string _envShName = "env.sh";
 
         public override bool ConfigureService(AgentSettings settings, CommandSettings command)
         {
@@ -35,7 +34,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             try
             {
                 string svcShPath = Path.Combine(IOUtil.GetRootPath(), _svcShName);
-                string envShPath = Path.Combine(IOUtil.GetRootPath(), _envShName);
 
                 // TODO: encoding?
                 // TODO: Loc strings formatted into MSG_xxx vars in shellscript
@@ -55,10 +53,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
                 var unixUtil = HostContext.CreateService<IUnixUtil>();
                 unixUtil.ChmodAsync("755", svcShPath).GetAwaiter().GetResult();
-                unixUtil.ChmodAsync("755", envShPath).GetAwaiter().GetResult();
 
                 SvcSh("install");
-                unixUtil.ExecAsync(IOUtil.GetRootPath(), "bash", _envShName).GetAwaiter().GetResult();
 
                 _term.WriteLine(StringUtil.Loc("ServiceConfigured", ServiceName));
             }

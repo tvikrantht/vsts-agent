@@ -1,6 +1,6 @@
 #!/bin/bash
 
-varCheckList=('LANG' 'JAVA_HOME' 'ANT_HOME' 'M2_HOME' 'MYSQL_PATH')
+varCheckList=('LANG' 'JAVA_HOME' 'ANT_HOME' 'M2_HOME' 'ANDROID_HOME' 'GRADLE_HOME')
 envContents=""
 
 if [ -f ".Env" ]; then
@@ -9,23 +9,16 @@ else
     touch .Env
 fi
 
-# echo Contents:
-# echo ${envContents}
-
 function writeVar()
 {
     checkVar="$1"
     checkDelim="${1}="
-    if test "${envContents#*$checkDelim}" != "$envContents"
+    if test "${envContents#*$checkDelim}" = "$envContents"
     then
-        echo "Contents contains ${checkVar}"
-        
-    else
-        echo "Does not contain ${checkVar}"
         if [ ! -z "${!checkVar}" ]; then
             echo "${checkVar}=${!checkVar}">>.Env
         fi
-    fi    
+    fi 
 }
 
 echo $PATH>.Path

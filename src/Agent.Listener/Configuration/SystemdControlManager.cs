@@ -20,7 +20,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
         private const string VstsAgentServiceTemplate = "vsts.agent.service.template";
         private const string _shTemplate = "systemd.svc.sh.template";
         private const string _shName = "svc.sh";
-        private const string _envShName = "env.sh";
 
         public override bool ConfigureService(
             AgentSettings settings,
@@ -68,7 +67,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 unixUtil.ChmodAsync("755", svcShPath).GetAwaiter().GetResult();
 
                 SvcSh("install");
-                unixUtil.ExecAsync(IOUtil.GetRootPath(), "bash", _envShName).GetAwaiter().GetResult();
 
                 _term.WriteLine(StringUtil.Loc("ServiceConfigured", ServiceName));
             }
