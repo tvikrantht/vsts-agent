@@ -57,8 +57,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 unixUtil.ChmodAsync("755", svcShPath).GetAwaiter().GetResult();
                 unixUtil.ChmodAsync("755", envShPath).GetAwaiter().GetResult();
 
-                Bash(_svcShName, "install");
-                Bash(_envShName);
+                SvcSh("install");
+                unixUtil.ExecAsync(IOUtil.GetRootPath(), "bash", _envShName).GetAwaiter().GetResult();
 
                 _term.WriteLine(StringUtil.Loc("ServiceConfigured", ServiceName));
             }
@@ -81,19 +81,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 
         public override void UnconfigureService()
         {
-            Bash(_svcShName, "uninstall");
+            SvcSh("uninstall");
             string svcShPath = Path.Combine(IOUtil.GetRootPath(), _svcShName);
             IOUtil.Delete(svcShPath, default(CancellationToken));
         }
 
         public override void StartService()
         {
-            Bash(_svcShName, "start");
+            SvcSh("start");
         }
 
         public override void StopService()
         {
-            Bash(_svcShName, "stop");
+            SvcSh("stop");
         }
 
         public override bool CheckServiceExists(string serviceName)
@@ -111,18 +111,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             return plistPath;
         }
 
-        private void Bash(string scriptName)
-        {
-            Bash(scriptName, null);
-        }
-
-        private void Bash(string scriptName, string argString)
+        private void SvcSh(string command)
         {
             Trace.Entering();
 
-            string argLine = string.IsNullOrEmpty(argString) ? scriptName : StringUtil.Format("{0} {1}", scriptName, argString);
+            string argLine = StringUtil.Format("{0} {1}", _svcShName, command);
             var unixUtil = HostContext.CreateService<IUnixUtil>();
             unixUtil.ExecAsync(IOUtil.GetRootPath(), "bash", argLine).GetAwaiter().GetResult();
-        }
+        }        
     }
 }
