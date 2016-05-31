@@ -1,4 +1,4 @@
-# ![osx](../apple_med.png) OSX Agent
+# ![osx](../res/apple_med.png) OSX Agent
 
 ## Step 1: System Requirements
 
@@ -20,6 +20,10 @@ Download the agent from [github releases](https://github.com/Microsoft/vsts-agen
 ~/myagent$ ./config.sh
 
 ```
+
+[Config VSTS Details](configvsts.md)  
+
+[Config On-Prem Details](configonprem.md)
 
 > NOTE: running as a service [details here](nixsvc.md)
 
