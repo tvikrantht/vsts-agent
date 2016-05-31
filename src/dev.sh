@@ -191,6 +191,12 @@ function layout ()
     
     cp -Rf ./Misc/layoutroot/* ${LAYOUT_DIR}
     cp -Rf ./Misc/layoutbin/* ${LAYOUT_DIR}/bin
+    
+    #change execution flag to allow running with sudo
+    if [[ "$PLATFORM" == 'linux' ]]; then
+        chmod +x ${LAYOUT_DIR}/bin/Agent.Listener
+        chmod +x ${LAYOUT_DIR}/bin/Agent.Worker
+    fi
 
     # clean up files not meant for platform
     if [[ ("$PLATFORM_NAME" == "Linux") || ("$PLATFORM_NAME" == "Darwin") ]]; then
