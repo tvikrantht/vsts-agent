@@ -47,7 +47,7 @@ cd ~/dotnet
 
 wget https://dotnetcli.blob.core.windows.net/dotnet/preview/Binaries/1.0.0-preview2-002875/dotnet-dev-rhel-x64.1.0.0-preview2-002875.tar.gz  
 
-tar zxfv dotnet-dev-rhel-x64.1.0.0-rc2-002416.tar.gz
+tar zxfv dotnet-dev-rhel-x64.1.0.0-preview2-002875.tar.gz
 
 sudo yum -y install libunwind.x86_64 icu git curl zip unzip
 ```
